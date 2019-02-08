@@ -21,6 +21,7 @@ class HeaderBiddingScript
 				'adidKeyName' => substr("hb_adid_$ssp", 0, 20),
 				'sizeKeyName' => substr("hb_size_$ssp", 0, 20),
 				'currency' => $params['currency'],
+				'trafficker' => isset($params['trafficker']) ? $params['trafficker'] : null,
 				'ssp' => $ssp,
 			];
 			$script = new SSPScript($param);
@@ -40,6 +41,7 @@ class HeaderBiddingScript
 			'adidKeyName' => substr('hb_adid', 0, 20),
 			'sizeKeyName' => substr('hb_size', 0, 20),
 			'currency' => $params['currency'],
+			'trafficker' => isset($params['trafficker']) ? $params['trafficker'] : null,
 			'ssp' => '',
 		];
 		$script = new SSPScript($params);

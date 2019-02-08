@@ -4,9 +4,21 @@ namespace App\AdManager;
 
 require __DIR__.'/../../vendor/autoload.php';
 
+use Google\AdsApi\AdManager\Util\v201811\StatementBuilder;
+
 class UserManager extends Manager
 {
 	protected $user;
+
+	public function __construct($email = null, $name = null, $roleId = null)
+	{
+		parent::__construct();
+		if ($email) {
+			$this->user = $this->createUser($email, $name, $roleId);
+		} else {
+			$this->user = $this->getCurrentUser();
+		}
+	}
 
 	public function getCurrentUser()
 	{
@@ -19,35 +31,55 @@ class UserManager extends Manager
 			'userMail' => $user->getEmail(),
 			'userRole' => $user->getRoleName(),
 		];
-		$this->user = $output;
 
 		return $output;
 	}
 
-	public function createUser()
+	public function getUser()
+	{
+		return $this->user;
+	}
+
+	public function createUser($email, $name = null, $roleId = -1)
 	{
 		$userService = $this->serviceFactory->createUserService($this->session);
-		$user = new User();
-		$user->setName('Gabriel');
-		$user->setEmail('gabriel@insideall.com');
-		//$user->setName($userName);
-		$user->setRoleId('-1');
-		// Create the users on the server.
-		$results = $userService->createUsers([$user]);
-		// Print out some information for each created user.
-		foreach ($results as $i => $user) {
-			printf(
-				"%d) User with ID %d and name '%s' was created.\n",
-				$i,
-				$user->getId(),
-				$user->getName()
-			);
+
+		$statementBuilder = (new StatementBuilder())->where('email = :email')->orderBy('id ASC')->withBindVariableValue('email', $email);
+		$data = $userService->getUsersByStatement(
+			$statementBuilder->toStatement()
+		);
+		if (null !== $data->getResults() && isset($data->getResults()[0])) {
+			$user = $data->getResults()[0];
+		} else {
+			$user = new User();
+			$user->setEmail($email);
+			$user->setName($name ?: $email);
+			$user->setRoleId($roleId);
+
+			// Create the users on the server.
+			$results = $userService->createUsers([$user]);
+			// Print out some information for each created user.
+			foreach ($results as $i => $user) {
+				printf(
+					"%d) User with ID %d and name '%s' was created.\n",
+					$i,
+					$user->getId(),
+					$user->getName()
+				);
+			}
 		}
+
+		return [
+			'userId' => $user->getId(),
+			'userName' => $user->getName(),
+			'userMail' => $user->getEmail(),
+			'userRole' => $user->getRoleName(),
+		];
 	}
 
 	public function getUserId()
 	{
-		$userArray = $this->getCurrentUser();
+		$userArray = $this->getUser();
 
 		return $userArray['userId'];
 	}

@@ -38,10 +38,8 @@ class SSPScript extends \App\AdManager\Manager
 		$this->valuesList = Buckets::createBuckets($this->priceGranularity);
 
 		//Get the Trafficker Id
-		$this->traffickerId = (new \App\AdManager\UserManager())->getUserId();
+		$this->traffickerId = (new \App\AdManager\UserManager($this->trafficker))->getUserId();
 		echo 'TraffickerId: '.$this->traffickerId."\n";
-
-		
 
 		//Get the Advertising Company Id
 		$this->advertiserId = (new \App\AdManager\CompanyManager())->setUpCompany($this->advertiserName);
@@ -50,7 +48,6 @@ class SSPScript extends \App\AdManager\Manager
 		//Get the OrderId
 		$this->orderId = (new \App\AdManager\OrderManager())->setUpOrder($this->orderName, $this->advertiserId, $this->traffickerId);
 		echo 'OrderName : '.$this->orderName."\tOrderId: ".$this->orderId."\n";
-
 
 		//Create and get KeyIds
 		$this->priceKeyId = (new \App\AdManager\KeyManager())->setUpCustomTargetingKey($this->priceKeyName);
@@ -66,14 +63,10 @@ class SSPScript extends \App\AdManager\Manager
 		$this->dfpValuesList = $valuesManager->convertValuesListToDFPValuesList($this->valuesList);
 		echo "Values List Created\n";
 
-
-
-
 		$creativeManager = new \App\AdManager\CreativeManager();
 		$creativeManager->setSsp($this->ssp)
 			->setAdvertiserId($this->advertiserId);
 		$this->creativesList = $creativeManager->setUpCreatives();
-
 
 		echo "\n\n".json_encode($this->creativesList)."\n\n";
 		$this->rootAdUnitId = (new \App\AdManager\RootAdUnitManager())->setRootAdUnit();
