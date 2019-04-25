@@ -4,6 +4,7 @@ namespace App\AdManager;
 
 require __DIR__.'/../../vendor/autoload.php';
 
+use Google\AdsApi\AdManager\v201811\ActivateCustomTargetingKeys;
 use Google\AdsApi\AdManager\v201811\CustomTargetingKey;
 use Google\AdsApi\AdManager\v201811\CustomTargetingKeyType;
 use Google\AdsApi\AdManager\Util\v201811\StatementBuilder;
@@ -14,6 +15,8 @@ class KeyManager extends Manager
 	{
 		if (empty(($foo = $this->getCustomTargetingKey($keyName)))) {
 			$foo = $this->createCustomTargetingKey($keyName);
+		} elseif ($foo[0]['keyStatus'] === 'INACTIVE') {
+			$this->activateCustomTargetingKey($keyName);
 		}
 
 		return $foo[0]['keyId'];
@@ -33,6 +36,7 @@ class KeyManager extends Manager
 			$foo = [
 				'keyId' => $key->getId(),
 				'keyName' => $key->getName(),
+				'keyStatus' => $key->getStatus(),
 				'keyDisplayNameId' => $key->getDisplayName(),
 			];
 			array_push($output, $foo);
@@ -54,12 +58,25 @@ class KeyManager extends Manager
 			$foo = [
 				'keyId' => $key->getId(),
 				'keyName' => $key->getName(),
+				'keyStatus' => $key->getStatus(),
 				'keyDisplayNameId' => $key->getDisplayName(),
 			];
 			array_push($output, $foo);
 		}
 
 		return $output;
+	}
+
+	public function activateCustomTargetingKey($keyName)
+	{
+		$action = new ActivateCustomTargetingKeys();
+
+		$statementBuilder = (new StatementBuilder())
+			->where('name = :name')
+			->WithBindVariableValue('name', $keyName);
+
+		$customTargetingService = $this->serviceFactory->createCustomTargetingService($this->session);
+		$result = $customTargetingService->performCustomTargetingKeyAction($action, $statementBuilder->toStatement());
 	}
 
 	public function getCustomTargetingKey($keyName)
@@ -76,6 +93,7 @@ class KeyManager extends Manager
 				$foo = [
 					'keyId' => $key->getId(),
 					'keyName' => $key->getName(),
+					'keyStatus' => $key->getStatus(),
 					'keyDisplayNameId' => $key->getDisplayName(),
 				];
 				array_push($output, $foo);
